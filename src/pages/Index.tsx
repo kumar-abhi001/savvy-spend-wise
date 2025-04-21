@@ -59,11 +59,33 @@ const Index = () => {
     const { name, value, type, files } = e.target;
     if (type === "file" && files && files.length > 0) {
       const file = files[0];
-      setNewExpense(prev => ({
-        ...prev,
-        photo: file,
-        photoUrl: URL.createObjectURL(file),
-      }));
+      const photoUrl = URL.createObjectURL(file);
+
+      setNewExpense(prev => {
+        const next = { ...prev, photo: file, photoUrl };
+        
+        if (next.amount && next.category) {
+          const expense = {
+            id: expenses.length + 1,
+            amount: parseFloat(next.amount),
+            category: next.category,
+            date: next.date,
+            description: next.description,
+            photoUrl: photoUrl,
+          };
+          setExpenses([expense, ...expenses]);
+          setNewExpense({
+            amount: "",
+            category: "",
+            date: new Date().toISOString().slice(0, 10),
+            description: "",
+            photo: undefined,
+            photoUrl: "",
+          });
+          setIsAddDialogOpen(false);
+        }
+        return next;
+      });
     } else {
       setNewExpense(prev => ({ ...prev, [name]: value }));
     }
