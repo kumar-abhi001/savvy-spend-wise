@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,19 +8,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { Plus, TrendingUp, PiggyBank, Calendar, DollarSign, Tag, BarChart3, MessageSquareText } from "lucide-react";
+import { FileImage } from "lucide-react";
 import { GeminiInsights } from "@/components/ai-insights/GeminiInsights";
 
-// Sample data for demonstration
 const EXPENSE_CATEGORIES = [
   "Food", "Transportation", "Housing", "Utilities", "Entertainment", "Healthcare", "Shopping", "Education", "Travel", "Other"
 ];
 
 const DUMMY_EXPENSES = [
-  { id: 1, amount: 25.50, category: "Food", date: "2023-04-15", description: "Grocery shopping" },
-  { id: 2, amount: 45.00, category: "Transportation", date: "2023-04-14", description: "Gas" },
-  { id: 3, amount: 850.00, category: "Housing", date: "2023-04-10", description: "Rent" },
-  { id: 4, amount: 15.99, category: "Entertainment", date: "2023-04-13", description: "Movie tickets" },
-  { id: 5, amount: 120.00, category: "Utilities", date: "2023-04-11", description: "Electricity bill" },
+  { id: 1, amount: 25.50, category: "Food", date: "2023-04-15", description: "Grocery shopping", photoUrl: undefined },
+  { id: 2, amount: 45.00, category: "Transportation", date: "2023-04-14", description: "Gas", photoUrl: undefined },
+  { id: 3, amount: 850.00, category: "Housing", date: "2023-04-10", description: "Rent", photoUrl: undefined },
+  { id: 4, amount: 15.99, category: "Entertainment", date: "2023-04-13", description: "Movie tickets", photoUrl: undefined },
+  { id: 5, amount: 120.00, category: "Utilities", date: "2023-04-11", description: "Electricity bill", photoUrl: undefined },
 ];
 
 const COLORS = ['#9b87f5', '#7E69AB', '#6E59A5', '#D6BCFA', '#F2FCE2', '#FEF7CD', '#FEC6A1'];
@@ -48,15 +47,26 @@ const Index = () => {
     amount: "",
     category: "",
     date: new Date().toISOString().slice(0, 10),
-    description: ""
+    description: "",
+    photo: undefined as File | undefined,
+    photoUrl: "" as string | undefined,
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [aiTips, setAiTips] = useState(DUMMY_AI_TIPS);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewExpense(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, files } = e.target;
+    if (type === "file" && files && files.length > 0) {
+      const file = files[0];
+      setNewExpense(prev => ({
+        ...prev,
+        photo: file,
+        photoUrl: URL.createObjectURL(file),
+      }));
+    } else {
+      setNewExpense(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleCategoryChange = (value: string) => {
@@ -71,7 +81,8 @@ const Index = () => {
       amount: parseFloat(newExpense.amount),
       category: newExpense.category,
       date: newExpense.date,
-      description: newExpense.description
+      description: newExpense.description,
+      photoUrl: newExpense.photoUrl,
     };
     
     setExpenses([expense, ...expenses]);
@@ -79,7 +90,9 @@ const Index = () => {
       amount: "",
       category: "",
       date: new Date().toISOString().slice(0, 10),
-      description: ""
+      description: "",
+      photo: undefined,
+      photoUrl: "",
     });
     setIsAddDialogOpen(false);
   };
@@ -113,7 +126,6 @@ const Index = () => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="dashboard" className="w-full">
             <TabsList className="grid grid-cols-4 mb-8">
@@ -123,7 +135,6 @@ const Index = () => {
               <TabsTrigger value="reports" className="text-sm">Reports</TabsTrigger>
             </TabsList>
 
-            {/* Dashboard Tab */}
             <TabsContent value="dashboard">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <Card>
@@ -211,7 +222,6 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            {/* Expenses Tab */}
             <TabsContent value="expenses">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -293,6 +303,27 @@ const Index = () => {
                             placeholder="What was this expense for?"
                           />
                         </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="photo" className="text-right">
+                            Bill Photo
+                          </Label>
+                          <div className="col-span-3 flex items-center gap-2">
+                            <Input
+                              id="photo"
+                              name="photo"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleInputChange}
+                            />
+                            {newExpense.photoUrl && (
+                              <img
+                                src={newExpense.photoUrl}
+                                alt="Bill Preview"
+                                className="h-10 w-10 rounded object-cover border"
+                              />
+                            )}
+                          </div>
+                        </div>
                       </div>
                       <DialogFooter>
                         <Button type="submit" onClick={handleAddExpense}>Save Expense</Button>
@@ -309,7 +340,18 @@ const Index = () => {
                             <Tag className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <div className="font-medium">{expense.description}</div>
+                            <div className="font-medium flex items-center gap-2">
+                              {expense.description}
+                              {expense.photoUrl && (
+                                <span className="ml-2">
+                                  <img
+                                    src={expense.photoUrl}
+                                    alt="Bill"
+                                    className="h-6 w-6 rounded object-cover inline-block border"
+                                  />
+                                </span>
+                              )}
+                            </div>
                             <div className="text-sm text-muted-foreground">
                               {expense.category} • {new Date(expense.date).toLocaleDateString()}
                             </div>
@@ -323,7 +365,6 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            {/* Budget Tab */}
             <TabsContent value="budget">
               <Card>
                 <CardHeader>
@@ -349,7 +390,6 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            {/* Reports Tab */}
             <TabsContent value="reports">
               <Card>
                 <CardHeader>
@@ -380,7 +420,6 @@ const Index = () => {
           </Tabs>
         </div>
 
-        {/* AI Assistant Sidebar */}
         <div className="lg:col-span-1">
           <GeminiInsights />
         </div>

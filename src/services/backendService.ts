@@ -1,4 +1,3 @@
-
 // This file will integrate with the Django backend once it's set up
 
 export interface Expense {
@@ -7,6 +6,7 @@ export interface Expense {
   category: string;
   date: string;
   description: string;
+  photoUrl?: string; // Added optional bill photo field
 }
 
 export interface BudgetRecommendation {
