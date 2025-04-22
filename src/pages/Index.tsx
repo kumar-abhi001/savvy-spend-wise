@@ -10,6 +10,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis
 import { Plus, TrendingUp, PiggyBank, Calendar, DollarSign, Tag, BarChart3, MessageSquareText } from "lucide-react";
 import { FileImage } from "lucide-react";
 import { GeminiInsights } from "@/components/ai-insights/GeminiInsights";
+import { supabase } from "@/lib/supabase";
+import { toast } from "react-toastify";
 
 const EXPENSE_CATEGORIES = [
   "Food", "Transportation", "Housing", "Utilities", "Entertainment", "Healthcare", "Shopping", "Education", "Travel", "Other"
@@ -140,9 +142,23 @@ const Index = () => {
     }, 2000);
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Successfully logged out!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-7xl">
-      <header className="mb-10 text-center">
+      <header className="mb-10 text-center relative">
+        <div className="absolute right-0 top-0">
+          <Button variant="outline" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
         <h1 className="text-4xl font-bold text-gradient mb-2">Savvy Spend Wise</h1>
         <p className="text-muted-foreground">Your AI-Powered Expense Tracker</p>
       </header>
